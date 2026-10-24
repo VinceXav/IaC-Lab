@@ -1,0 +1,56 @@
+- name: "Update and upgrade apt packages"
+  hosts: "debians"
+  become: true
+  tasks:
+    - name: "Update apt packages"
+      ansible.builtin.apt:
+        update_cache: "yes"
+        cache_valid_time: 86400 #One day
+    - name: "Upgrade apt packages"
+      ansible.builtin.apt:
+        upgrade: "yes"
+        cache_valid_time: 86400 #One day
+
+- name: "Install and configure Vim"
+  hosts: "debians"
+  become: true
+  tasks:
+    - name: "Install Vim"
+      ansible.builtin.apt:
+        name: "vim"
+        state: "present"
+    - name: "Add vimrc"
+      ansible.builtin.copy:
+        src: "../config_files/vimrc"
+        dest: "/etc/vim/vimrc"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+
+- name: "Install Python3 and Pip"
+  hosts: "debians"
+  become: true
+  tasks:
+    - name: "Install Python3 and Pip"
+      ansible.builtin.apt:
+        name: ["python3", "python3-pip"]
+        state: "present"
+
+- name: "Define aliases"
+  hosts: "debians"
+  become: true
+  tasks:
+    - name: "Add aliases"
+      ansible.builtin.lineinfile:
+        path: "/etc/bash.bashrc"
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+        state: "present"
+        insertafter: EOF
+        create: false
+      loop:
+        - { regexp: "^alias c", line: "alias c='clear'" }
+        - { regexp: "^alias l", line: "alias l='ls -lah --color=auto'" }
+        - { regexp: "^alias e", line: "alias e='exit'" }
+        - { regexp: "^alias vi", line: "alias vi='vim'" }
+        - { regexp: "^alias py", line: "alias py='python3'" }
