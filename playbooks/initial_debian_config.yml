@@ -1,5 +1,6 @@
 - name: "Update and upgrade apt packages"
   hosts: "debians"
+  gather_facts: true
   become: true
   tasks:
     - name: "Update apt packages"
@@ -13,6 +14,7 @@
 
 - name: "Install and configure Vim"
   hosts: "debians"
+  gather_facts: false
   become: true
   tasks:
     - name: "Install Vim"
@@ -29,6 +31,7 @@
 
 - name: "Install Python3 and Pip"
   hosts: "debians"
+  gather_facts: false
   become: true
   tasks:
     - name: "Install Python3 and Pip"
@@ -39,6 +42,7 @@
 - name: "Define aliases"
   hosts: "debians"
   become: true
+  gather_facts: false
   tasks:
     - name: "Add aliases"
       ansible.builtin.lineinfile:
@@ -54,3 +58,29 @@
         - { regexp: "^alias e", line: "alias e='exit'" }
         - { regexp: "^alias vi", line: "alias vi='vim'" }
         - { regexp: "^alias py", line: "alias py='python3'" }
+
+- name: "Set SSHD configuration"
+  hosts: "debians"
+  gather_facts: false
+  become: true
+  tasks:
+    - name: "Change lines in sshd_config"
+      ansible.builtin.lineinfile:
+        path: "/etc/ssh/sshd_config"
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+        insertafter: "{{ item.regexp }}"
+        state: "present"
+        create: false
+      loop:
+        - { line: "PermitRootLogin no", regexp: "^#?\\s?PermitRootLogin " }
+        - {
+            line: "PubkeyAuthentication yes",
+            regexp: "^#?\\s?PubkeyAuthentication ",
+          }
+        - {
+            line: "PermitEmptyPasswords no",
+            regexp: "^#?\\s?PermitEmptyPasswords ",
+          }
+        - { line: "MaxAuthTries 3", regexp: "^#?\\s?MaxAuthTries " }
+        - { line: "MaxSessions 2", regexp: "^#?\\s?MaxSessions " }
